@@ -1,0 +1,42 @@
+version: "3.9"
+
+networks:
+  db-common:
+    external:
+      name: db-persistent-stack
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongo-persistent-stack
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongo:/data/db
+    networks:
+      - db-common
+
+  redis:
+    image: redis:alpine
+    container_name: redis-persistent-stack
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - db-common
+
+  mysql:
+    image: mysql
+    container_name: mysql-persistent-stack
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - 3306:3306
+    volumes:
+      - ./data/mysql:/var/lib/mysqld
+    networks:
+      - db-common

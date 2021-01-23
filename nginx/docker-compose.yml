@@ -1,0 +1,16 @@
+version: "3.9"
+
+networks:
+  proxy:
+    external:
+      name: nginx-persistent-stack
+
+services:
+  nginx:
+    container_name: nginx-persistent-stack
+    build: .
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - proxy
