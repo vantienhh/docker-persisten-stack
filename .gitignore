@@ -2,6 +2,8 @@ database/data
 
 .idea
 .DS_Store
+.vscode
+database/data
 
 # Use yarn.lock instead
 package-lock.json
