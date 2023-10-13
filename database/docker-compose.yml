@@ -1,0 +1,82 @@
+version: "3.9"
+
+networks:
+  db-common:
+    name: db-common
+
+services:
+  postgres:
+    container_name: postgres-common
+    image: postgres:16.0
+    restart: unless-stopped
+    volumes:
+      - ./data/postgres:/var/lib/postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - 54321:5432
+    networks:
+      - db-common
+
+  redis:
+    container_name: redis-common
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - 63791:6379
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - db-common
+
+  elastic-search:
+    container_name: elastic-search
+    build:
+      context: elastic-search
+      dockerfile: Dockerfile
+    # restart: unless-stopped
+    labels:
+      - "security.opt=java.lang.RuntimePermission accessClassInPackage.sun.misc"
+      - "security.opt=java.lang.RuntimePermission accessDeclaredMembers"
+      - "security.opt=java.lang.RuntimePermission loadLibrary.coccoc_tokenizer_jni"
+      - "security.opt=java.lang.reflect.ReflectPermission suppressAccessChecks"
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - transport.host 0.0.0.0
+      - network.host 0.0.0.0
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./data/elastic-search:/usr/share/elasticsearch/data
+    networks:
+      - db-common
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elastic-search:9200
+      - xpack.security.enabled=true
+    ports:
+      - 5601:5601
+    depends_on:
+      - elastic-search
+    volumes:
+      - ./data/kibana:/usr/share/kibana/data
+    networks:
+      - db-common
+
+  # mongo:
+  #   image: mongo
+  #   container_name: mongo-common
+  #   restart: always
+  #   ports:
+  #     - 27017:27017
+  #   volumes:
+  #     - ./data/mongo:/data/db
+  #   networks:
+  #     - db-common
